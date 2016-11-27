@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Web;
 
@@ -16,7 +17,7 @@ namespace WebApplication1
             this.stage = stage;
         }
 
-        public bool DownloadLastVer()
+        public bool DownloadLastVer(string localPath)
         {
             string plmSopName = GetPLMSopName();
             Esop tempSop = GetTempSop();
@@ -26,8 +27,21 @@ namespace WebApplication1
 
             if (string.IsNullOrEmpty(plmSopName))
             {
-                ftpProxy.Download()
-                //download tempSop
+                foreach(EsopDetail esopDetail in tempSop.EsopDetailList)
+                {
+                    string filePath;
+                    if (esopDetail.Type == "SOP")
+                        filePath = System.IO.Path.Combine(localPath, esopDetail.FileName);
+                    else
+                        filePath = System.IO.Path.Combine(localPath, esopDetail.Stage, esopDetail.FileName);
+
+                    string folderPath = System.IO.Path.GetDirectoryName(filePath);
+                    if (!Directory.Exists(folderPath))
+                        Directory.CreateDirectory(folderPath);
+
+                    ftpProxy.Download(System.IO.Path.Combine(esopDetail.Folder, esopDetail.FileName), filePath);
+                }
+                
                 return true;
             }
 
